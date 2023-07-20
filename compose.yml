@@ -4,18 +4,22 @@ services:
   localstack:
     image: localstack/localstack
     ports:
-      - "4566:4566"
+      - 4566:4566
     volumes:
       - localstack:/var/lib/localstack
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      - internal
+      internal:
+        aliases:
+          - s3.localhost.localstack.cloud
+          - files-bucket.s3.localhost.localstack.cloud
 
   app:
     image: mcr.microsoft.com/devcontainers/python:1-3.11-bullseye
     environment:
+      LOCALSTACK_HOST: localstack:4566
       LOCALSTACK_HOSTNAME: localstack
-      AWS_ENDPOINT_URL: http://localstack:4566
+      # S3_HOSTNAME: s3.localstack
     networks:
       - internal
 
