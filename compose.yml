@@ -20,6 +20,7 @@ services:
     environment:
       LOCALSTACK_HOST: localhost.localstack.cloud:4566
       LOCALSTACK_HOSTNAME: localhost.localstack.cloud
+      DEFAULT_REGION: us-east-1
     networks:
       - internal
 
