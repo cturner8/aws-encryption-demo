@@ -1,0 +1,1 @@
+tflocal -chdir=infrastructure init
