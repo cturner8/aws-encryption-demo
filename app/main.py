@@ -1,19 +1,7 @@
 import kms
 import logging
-import os
-import argparse
-
-KMS_KEY_ID = os.getenv("KMS_KEY_ID")
-
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "-l",
-    "--log",
-    default="warning",
-    help="Provide logging level. Example --log debug, default=warning",
-)
-
-args = parser.parse_args()
+import env
+from args import args
 
 logging.basicConfig(level=args.log.upper())
 
@@ -21,7 +9,7 @@ logging.basicConfig(level=args.log.upper())
 def main():
     logging.info("Starting")
 
-    encrypted = kms.encrypt_file("./files/test.txt", KMS_KEY_ID)
+    encrypted = kms.encrypt_file("./files/test.txt", env.KMS_KEY_ID)
 
     logging.info("Encrypted: %s", encrypted)
 
