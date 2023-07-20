@@ -11,15 +11,15 @@ services:
     networks:
       internal:
         aliases:
+          - localhost.localstack.cloud
           - s3.localhost.localstack.cloud
           - files-bucket.s3.localhost.localstack.cloud
 
   app:
     image: mcr.microsoft.com/devcontainers/python:1-3.11-bullseye
     environment:
-      LOCALSTACK_HOST: localstack:4566
-      LOCALSTACK_HOSTNAME: localstack
-      # S3_HOSTNAME: s3.localstack
+      LOCALSTACK_HOST: localhost.localstack.cloud:4566
+      LOCALSTACK_HOSTNAME: localhost.localstack.cloud
     networks:
       - internal
 
