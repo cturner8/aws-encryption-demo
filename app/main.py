@@ -20,7 +20,6 @@ logging.basicConfig(level=args.log.upper())
 
 def main():
     logging.info("Starting")
-    kms.create_data_key(KMS_KEY_ID)
 
     encrypted = kms.encrypt_file("./files/test.txt", KMS_KEY_ID)
 
