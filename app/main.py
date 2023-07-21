@@ -1,24 +1,32 @@
+from logger import logger
+
 import kms
-import logging
+import s3
+
 import env
-from args import args
 
-logging.basicConfig(level=args.log.upper())
-
+FILE_NAME = "test.txt"
 
 def main():
-    logging.info("Starting")
+    logger.info("Starting")
 
-    encrypted = kms.encrypt_file("./files/test.txt", env.KMS_KEY_ID)
+    target_file = s3.get_file(FILE_NAME, env.BUCKET_NAME)
 
-    logging.info("Encrypted: %s", encrypted)
+    encrypted, encrypted_file = kms.encrypt_file(target_file.name, env.KMS_KEY_ID)
+
+    logger.info("Encrypted: %s", encrypted)
 
     if encrypted == True:
-        decrypted = kms.decrypt_file("./files/test.txt")
+        s3.upload_file(encrypted_file.name, env.BUCKET_NAME)
 
-        logging.info("Decrypted: %s", decrypted)
+        decrypted, decrypted_file = kms.decrypt_file(target_file.name)
 
-    logging.info("Done")
+        if decrypted == True:
+            s3.upload_file(decrypted_file.name, env.BUCKET_NAME)
+
+        logger.info("Decrypted: %s", decrypted)
+
+    logger.info("Done")
 
 
 if __name__ == "__main__":

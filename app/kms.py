@@ -1,4 +1,5 @@
-import logging
+from logger import logger
+
 import base64
 from cryptography.fernet import Fernet
 
@@ -23,16 +24,16 @@ def create_data_key(cmk_id, key_spec="AES_256"):
         PlaintextDataKey: Plaintext base64-encoded data key as binary string
     :return Tuple(None, None) if error
     """
-    logging.info("Creating data key")
+    logger.info("Creating data key")
 
     # Create data key
     try:
         response = kms_client.generate_data_key(KeyId=cmk_id, KeySpec=key_spec)
     except ClientError as e:
-        logging.error(e)
+        logger.error(e)
         return None, None
 
-    logging.info("Created new AWS KMS data key")
+    logger.info("Created new AWS KMS data key")
 
     # Return the encrypted and plaintext data key
     return response["CiphertextBlob"], base64.b64encode(response["Plaintext"])
@@ -58,7 +59,7 @@ def encrypt_file(filename, cmk_id):
         with open(filename, "rb") as file:
             file_contents = file.read()
     except IOError as e:
-        logging.error(e)
+        logger.error(e)
         return False
 
     # Generate a data key associated with the CMK
@@ -69,7 +70,7 @@ def encrypt_file(filename, cmk_id):
     if data_key_encrypted is None:
         return False
 
-    logging.info("Encrypting file: %s", filename)
+    logger.info("Encrypting file: %s", filename)
 
     # Encrypt the file
     f = Fernet(data_key_plaintext)
@@ -86,16 +87,16 @@ def encrypt_file(filename, cmk_id):
             file_encrypted.write(data_key_encrypted)
             file_encrypted.write(file_contents_encrypted)
     except IOError as e:
-        logging.error(e)
-        return False
+        logger.error(e)
+        return False, None
 
-    logging.info("File encrypted: %s", encrypted_filename)
+    logger.info("File encrypted: %s", encrypted_filename)
 
     # For the highest security, the data_key_plaintext value should be wiped
     # from memory. Unfortunately, this is not possible in Python. However,
     # storing the value in a local variable makes it available for garbage
     # collection.
-    return True
+    return True, file_encrypted
 
 
 def decrypt_data_key(data_key_encrypted):
@@ -106,16 +107,16 @@ def decrypt_data_key(data_key_encrypted):
     :return None if error
     """
 
-    logging.info("Decrypting data key")
+    logger.info("Decrypting data key")
 
     # Decrypt the data key
     try:
         response = kms_client.decrypt(CiphertextBlob=data_key_encrypted)
     except ClientError as e:
-        logging.error(e)
+        logger.error(e)
         return None
 
-    logging.info("Data key decrypted")
+    logger.info("Data key decrypted")
 
     # Return plaintext base64-encoded binary data key
     return base64.b64encode((response["Plaintext"]))
@@ -131,15 +132,15 @@ def decrypt_file(filename):
     :return: True if file was decrypted. Otherwise, False.
     """
 
-    logging.info("Decrypting file: %s", filename)
+    logger.info("Decrypting file: %s", filename)
 
     # Read the encrypted file into memory
     try:
         with open(filename + ".encrypted", "rb") as file:
             file_contents = file.read()
     except IOError as e:
-        logging.error(e)
-        return False
+        logger.error(e)
+        return False, None
 
     # The first NUM_BYTES_FOR_LEN bytes contain the integer length of the
     # encrypted data key.
@@ -154,7 +155,7 @@ def decrypt_file(filename):
     # Decrypt the data key before using it
     data_key_plaintext = decrypt_data_key(data_key_encrypted)
     if data_key_plaintext is None:
-        return False
+        return False, None
 
     # Decrypt the rest of the file
     f = Fernet(data_key_plaintext)
@@ -166,12 +167,12 @@ def decrypt_file(filename):
         with open(filename + ".decrypted", "wb") as file_decrypted:
             file_decrypted.write(file_contents_decrypted)
     except IOError as e:
-        logging.error(e)
-        return False
+        logger.error(e)
+        return False, None
 
-    logging.info("File decrypted: %s", decrypted_filename)
+    logger.info("File decrypted: %s", decrypted_filename)
 
     # The same security issue described at the end of encrypt_file() exists
     # here, too, i.e., the wish to wipe the data_key_plaintext value from
     # memory.
-    return True
+    return True, file_decrypted
