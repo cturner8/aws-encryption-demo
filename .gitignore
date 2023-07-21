@@ -167,6 +167,7 @@ cython_debug/
 .terraform.tfstate.lock.info
 localstack_providers_override.tf
 tfplan
+infrastructure/archive
 
 # files
 files/*.encrypted

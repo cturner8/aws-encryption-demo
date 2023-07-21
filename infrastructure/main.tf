@@ -4,8 +4,13 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.8"
     }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.4.0"
+    }
   }
 }
 
-# Configure the AWS Provider
 provider "aws" {}
+
+provider "archive" {}
